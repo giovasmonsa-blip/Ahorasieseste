@@ -1,0 +1,105 @@
+-- Cargar la biblioteca de GUI
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local mouse = player:GetMouse()
+
+-- Crear el menú circular
+local circleMenu = Instance.new("ScreenGui")
+circleMenu.Name = "CircleMenu"
+circleMenu.Parent = player:WaitForChild("PlayerGui")
+
+local circleFrame = Instance.new("Frame")
+circleFrame.Size = UDim2.new(0, 100, 0, 100)
+circleFrame.Position = UDim2.new(0.5, -50, 0.5, -50)
+circleFrame.BackgroundColor3 = Color3.new(0, 0, 0)
+circleFrame.BorderSizePixel = 0
+circleFrame.Parent = circleMenu
+
+local circleButton = Instance.new("TextButton")
+circleButton.Size = UDim2.new(1, 0, 1, 0)
+circleButton.Position = UDim2.new(0, 0, 0, 0)
+circleButton.Text = "Open Menu"
+circleButton.BackgroundColor3 = Color3.new(1, 1, 1)
+circleButton.TextColor3 = Color3.new(0, 0, 0)
+circleButton.Parent = circleFrame
+
+-- Crear el menú rectangular
+local rectMenu = Instance.new("ScreenGui")
+rectMenu.Name = "RectMenu"
+rectMenu.Parent = player:WaitForChild("PlayerGui")
+
+local rectFrame = Instance.new("Frame")
+rectFrame.Size = UDim2.new(0, 200, 0, 100)
+rectFrame.Position = UDim2.new(0.5, -100, 0.5, -50)
+rectFrame.BackgroundColor3 = Color3.new(0, 0, 0)
+rectFrame.BorderSizePixel = 0
+rectFrame.Visible = false
+rectFrame.Parent = rectMenu
+
+local doubleJumpButton = Instance.new("TextButton")
+doubleJumpButton.Size = UDim2.new(0.5, 0, 1, 0)
+doubleJumpButton.Position = UDim2.new(0, 0, 0, 0)
+doubleJumpButton.Text = "Double Jump: Off"
+doubleJumpButton.BackgroundColor3 = Color3.new(1, 1, 1)
+doubleJumpButton.TextColor3 = Color3.new(0, 0, 0)
+doubleJumpButton.Parent = rectFrame
+
+-- Funcionalidad del menú circular
+circleButton.MouseButton1Click:Connect(function()
+    rectFrame.Visible = not rectFrame.Visible
+end)
+
+-- Funcionalidad del botón de doble salto
+local doubleJumpEnabled = false
+
+doubleJumpButton.MouseButton1Click:Connect(function()
+    doubleJumpEnabled = not doubleJumpEnabled
+    if doubleJumpEnabled then
+        doubleJumpButton.Text = "Double Jump: On"
+        -- Lógica para habilitar el doble salto
+        local humanoid = player.Character:WaitForChild("Humanoid")
+        humanoid.JumpPower = 100 -- Ajusta este valor para controlar la altura del salto
+    else
+        doubleJumpButton.Text = "Double Jump: Off"
+        -- Lógica para deshabilitar el doble salto
+        local humanoid = player.Character:WaitForChild("Humanoid")
+        humanoid.JumpPower = 50 -- Restaura el valor original del JumpPower
+    end
+end)
+
+-- Hacer que el menú circular sea arrastrable
+local dragging
+local dragInput
+local dragStart
+local startPos
+
+local function update(input)
+    local delta = input.Position - dragStart
+    circleFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+
+circleFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = circleFrame.Position
+
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+circleFrame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+game:GetService("UserInputService").InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        update(input)
+    end
+end)
